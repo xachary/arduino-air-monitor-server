@@ -2,6 +2,8 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
+process.env.TZ = 'Asia/Shanghai'
+
 const server = http.createServer(function (request, response) {
   const url = request.url;
   const method = request.method.toLowerCase();
@@ -92,17 +94,20 @@ const server = http.createServer(function (request, response) {
 
         request.on("end", () => {
           const num = parseFloat(body);
+          console.log("body", body)
 
-          if (!fs.existsSync(dirPath)) {
-            fs.mkdirSync(dirPath);
+          if(!isNaN(num)){
+            if (!fs.existsSync(dirPath)) {
+              fs.mkdirSync(dirPath);
+            }
+  
+            fs.appendFileSync(
+              logPath,
+              `${hour.toString().padStart(2, "0")}${minute
+                .toString()
+                .padStart(2, "0")}${date.toString().padStart(2, "0")}_${num}\n`
+            );
           }
-
-          fs.appendFileSync(
-            logPath,
-            `${hour.toString().padStart(2, "0")}${minute
-              .toString()
-              .padStart(2, "0")}${date.toString().padStart(2, "0")}_${num}\n`
-          );
 
           response.writeHead(200, {
             "Content-Type": "application/json;charset=UTF-8",

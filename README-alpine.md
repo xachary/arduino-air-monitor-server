@@ -23,6 +23,28 @@ apk update
 apk add nodejs
 ```
 
+## 时区时间
+
+```bash
+# 查看时区
+date -R
+
+# 设置新的时区
+apk add tzdata
+
+# 查看可用的时区
+ls /usr/share/zoneinfo
+
+# 复制
+cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+# 设置时区
+echo "Asia/Shanghai" >  /etc/timezone
+
+# 同步
+ntpd -d -q -n -p ntp3.aliyun.com
+```
+
 ## 服务启动
 
 把整个项目目录放在映射到容器中
