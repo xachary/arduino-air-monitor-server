@@ -1,0 +1,32 @@
+#!/sbin/openrc-run
+
+pidfile="/run/$RC_SVCNAME.pid"
+command="node /home/arduino-air-monitor-server/node-server/index.js"
+
+depend() {
+   need net
+}
+
+start() {
+   ebegin "Starting myApp"
+   start-stop-daemon --start --background \
+        --exec $command \
+        --make-pidfile --pidfile $pidfile
+   eend $?
+}
+
+stop() {
+   ebegin "Stopping myApp"
+   start-stop-daemon --stop \
+     --exec $command \
+     --pidfile $pidfile
+   eend $?
+}
+
+reload() {
+  ebegin "Reloading myApp"
+  start-stop-daemon --exec $command \
+    --pidfile $pidfile \
+    -s 1
+  eend $?
+}

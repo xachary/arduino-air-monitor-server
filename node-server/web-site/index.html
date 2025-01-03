@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>arduino-air-monitor</title>
+    <style>
+      body {
+        margin: 0;
+      }
+      #app {
+        /* display: flex;
+        flex-wrap: wrap; */
+      }
+      #app > section {
+        width: 100%;
+        height: 100vh;
+        overflow: hidden;
+      }
+    </style>
+    <script src="./vue.global.prod.js"></script>
+    <script src="./echarts.min.js"></script>
+  </head>
+  <body>
+    <div id="app">
+      <section id="hcho"></section>
+      <section id="tvoc"></section>
+      <section id="co2"></section>
+      <section id="temp"></section>
+      <section id="hum"></section>
+      <section id="uv"></section>
+    </div>
+
+    <script>
+      const { createApp, ref } = Vue;
+
+      createApp({
+        setup() {
+          return {
+            //
+          };
+        },
+        mounted() {
+          Promise.all([
+            this.loadType("hcho"),
+            this.loadType("tvoc"),
+            this.loadType("co2"),
+            this.loadType("temp"),
+            this.loadType("hum"),
+            this.loadType("uv"),
+          ]);
+
+          setInterval(() => {
+            fetch(`/${"hcho"}`, {
+              method: "POST",
+              body: parseFloat((Math.random() * 100).toFixed(1)),
+            });
+            fetch(`/${"tvoc"}`, {
+              method: "POST",
+              body: parseFloat((Math.random() * 1000).toFixed(1)),
+            });
+            fetch(`/${"co2"}`, {
+              method: "POST",
+              body: parseFloat((Math.random() * 1000).toFixed(1)),
+            });
+            fetch(`/${"temp"}`, {
+              method: "POST",
+              body: parseFloat((Math.random() * 40).toFixed(1)),
+            });
+            fetch(`/${"hum"}`, {
+              method: "POST",
+              body: parseFloat((Math.random() * 100).toFixed(1)),
+            });
+            fetch(`/${"uv"}`, {
+              method: "POST",
+              body: parseFloat((Math.random() * 1000).toFixed(1)),
+            });
+          }, 2000);
+        },
+        methods: {
+          renderChart(type, json) {
+            // 基于准备好的dom，初始化echarts实例
+            var myChart = echarts.init(document.getElementById(type));
+            // 绘制图表
+            myChart.setOption({
+              title: {
+                text: type.toUpperCase(),
+              },
+              tooltip: {},
+              xAxis: {
+                type: "category",
+                data: json.map((o) => o.time),
+                boundaryGap: false,
+              },
+              yAxis: {},
+              series: [
+                {
+                  name: "时间",
+                  type: "line",
+                  data: json.map((o) => o.value),
+                  smooth: true,
+                },
+              ],
+            });
+          },
+          //
+          loadType(type) {
+            fetch(`/${type}`)
+              .then((res) => res.json())
+              .then((json) => {
+                const set = [];
+                for (let h = 0; h < 24; h++) {
+                  set.push([]);
+                }
+                for (const record of json) {
+                  const match = record.time.match(/^(\d{2})(\d{2})/);
+                  const hour = match?.[1];
+                  set[parseInt(hour)]?.push(record.value);
+                }
+
+                const shortcuts = [];
+                for (let h = 0; h < 24; h++) {
+                  shortcuts.push({
+                    time: `${h.toString().padStart(2, "0")}`,
+                    value: parseFloat(
+                      (
+                        set[h].reduce((total, v) => {
+                          total += v;
+                          return total;
+                        }, 0) / set[h].length
+                      ).toFixed(1)
+                    ),
+                  });
+                }
+                this.renderChart(type, shortcuts);
+              });
+          },
+        },
+      }).mount("#app");
+    </script>
+  </body>
+</html>
