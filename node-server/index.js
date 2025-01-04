@@ -105,7 +105,7 @@ const server = http.createServer(function (request, response) {
               logPath,
               `${hour.toString().padStart(2, "0")}${minute
                 .toString()
-                .padStart(2, "0")}${minute.toString().padStart(2, "0")}_${num}\n`
+                .padStart(2, "0")}${second.toString().padStart(2, "0")}_${num}\n`
             );
           }
 
