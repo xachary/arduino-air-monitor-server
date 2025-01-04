@@ -2,7 +2,10 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no"
+    />
     <title>arduino-air-monitor</title>
     <style>
       body {
@@ -36,19 +39,19 @@
 
       createApp({
         setup() {
+          const board = ref();
           return {
-            //
+            board,
           };
         },
         mounted() {
-          Promise.all([
-            this.loadType("hcho"),
-            this.loadType("tvoc"),
-            this.loadType("co2"),
-            this.loadType("temp"),
-            this.loadType("hum"),
-            this.loadType("uv"),
-          ]);
+          const app = document.querySelector("#app");
+          if (app) {
+            const resizeObserver = new ResizeObserver(() => {
+              this.load();
+            });
+            resizeObserver.observe(app);
+          }
 
           setInterval(() => {
             // fetch(`/${"hcho"}`, {
@@ -102,6 +105,7 @@
                 },
               ],
             });
+            myChart.resize();
           },
           //
           loadType(type) {
@@ -134,6 +138,16 @@
                 }
                 this.renderChart(type, shortcuts);
               });
+          },
+          load() {
+            Promise.all([
+              this.loadType("hcho"),
+              this.loadType("tvoc"),
+              this.loadType("co2"),
+              this.loadType("temp"),
+              this.loadType("hum"),
+              this.loadType("uv"),
+            ]);
           },
         },
       }).mount("#app");
