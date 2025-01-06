@@ -37,7 +37,7 @@ const server = http.createServer(function (request, response) {
         }
       }
     );
-  } else if (/^\/.+\.js$/.test(url)) {
+  } else if (/^\/.+\.(js|ico)$/.test(url)) {
     fs.readFile(
       path.resolve(__dirname, `./web-site${url}`),
       function (err, data) {

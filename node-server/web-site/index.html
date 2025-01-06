@@ -82,6 +82,30 @@
         },
         methods: {
           renderChart(type, json) {
+            // 平均值
+            const average =
+              json.length > 0
+                ? json
+                    .map((o) => o.value)
+                    .reduce((total, each) => total + each, 0) / json.length
+                : 0;
+            // 最大值
+            const max =
+              json.length > 0
+                ? json
+                    .map((o) => o.value)
+                    .reduce((v, each) => (each > v ? each : v), -Infinity) /
+                  json.length
+                : 0;
+            // 最小值
+            const min =
+              json.length > 0
+                ? json
+                    .map((o) => o.value)
+                    .reduce((v, each) => (each < v ? each : v), Infinity) /
+                  json.length
+                : 0;
+
             // 基于准备好的dom，初始化echarts实例
             var myChart = echarts.init(document.getElementById(type));
             // 绘制图表
@@ -96,12 +120,146 @@
                 boundaryGap: false,
               },
               yAxis: {},
+              grid: {
+                left: "1.5%",
+                right: "2%",
+                top: "10%",
+                bottom: "2%",
+                containLabel: true,
+              },
               series: [
                 {
                   name: "时间",
                   type: "line",
                   data: json.map((o) => o.value),
                   smooth: true,
+                  lineStyle: {
+                    width: 1,
+                  },
+                  showSymbol: false,
+                },
+                {
+                  type: "line",
+                  name: "Mean",
+                  data: json
+                    .map((o) => o.time)
+                    .map(() => ({
+                      value: average,
+                      symbol: "none",
+                    })),
+                  silent: true,
+                  tooltip: {
+                    show: false,
+                  },
+                  lineStyle: {
+                    width: 0,
+                    color: "transparent",
+                  },
+                  label: {
+                    show: false,
+                  },
+                  markLine: {
+                    symbol: "none",
+                    data: [
+                      {
+                        type: "average",
+                        name: "Avg",
+                        label: {
+                          position: "insideMiddleTop",
+                          formatter: ({ value }) => `Mean: ${value.toFixed(2)}`,
+                          color: "#56a4d9",
+                          fontWeight: "bold",
+                          fontSize: 14,
+                        },
+                        lineStyle: {
+                          type: [14, 6],
+                          color: "#56a4d9",
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  type: "line",
+                  name: "Max",
+                  data: json
+                    .map((o) => o.time)
+                    .map(() => ({
+                      value: max,
+                      symbol: "none",
+                    })),
+                  silent: true,
+                  tooltip: {
+                    show: false,
+                  },
+                  lineStyle: {
+                    width: 0,
+                    color: "transparent",
+                  },
+                  label: {
+                    show: false,
+                  },
+                  markLine: {
+                    symbol: "none",
+                    data: [
+                      {
+                        type: "max",
+                        name: "Max",
+                        label: {
+                          position: "insideEndTop",
+                          formatter: ({ value }) => `Max: ${value.toFixed(2)}`,
+                          color: "red",
+                          fontWeight: "bold",
+                          fontSize: 14,
+                        },
+                        lineStyle: {
+                          type: [14, 6],
+                          color: "red",
+                        },
+                      },
+                    ],
+                  },
+                },
+                {
+                  type: "line",
+                  name: "Min",
+                  data: json
+                    .map((o) => o.time)
+                    .map(() => ({
+                      value: min,
+                      symbol: "none",
+                    })),
+                  silent: true,
+                  tooltip: {
+                    show: false,
+                  },
+                  lineStyle: {
+                    width: 0,
+                    color: "transparent",
+                  },
+                  label: {
+                    show: false,
+                  },
+                  markLine: {
+                    symbol: "none",
+                    data: [
+                      {
+                        type: "min",
+                        name: "Min",
+                        label: {
+                          position: "insideStartTop",
+                          formatter: ({ value }) => `Min: ${value.toFixed(2)}`,
+                          color: "green",
+                          fontWeight: "bold",
+                          fontSize: 14,
+                        },
+                        lineStyle: {
+                          type: [14, 6],
+                          color: "green",
+                        },
+                      },
+                    ],
+                  },
                 },
               ],
             });
@@ -126,14 +284,17 @@
                 for (let h = 0; h < 24; h++) {
                   shortcuts.push({
                     time: `${h.toString().padStart(2, "0")}`,
-                    value: parseFloat(
-                      (
-                        set[h].reduce((total, v) => {
-                          total += v;
-                          return total;
-                        }, 0) / set[h].length
-                      ).toFixed(1)
-                    ),
+                    value:
+                      set[h].length > 0
+                        ? parseFloat(
+                            (
+                              set[h].reduce((total, v) => {
+                                total += v;
+                                return total;
+                              }, 0) / set[h].length
+                            ).toFixed(1)
+                          )
+                        : 0,
                   });
                 }
                 this.renderChart(type, shortcuts);
