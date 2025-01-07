@@ -81,16 +81,14 @@
               json.length > 0
                 ? json
                     .map((o) => o.value)
-                    .reduce((v, each) => (each > v ? each : v), -Infinity) /
-                  json.length
+                    .reduce((v, each) => (each > v ? each : v), -Infinity)
                 : 0;
             // 最小值
             const min =
               json.length > 0
                 ? json
                     .map((o) => o.value)
-                    .reduce((v, each) => (each < v ? each : v), Infinity) /
-                  json.length
+                    .reduce((v, each) => (each < v ? each : v), Infinity)
                 : 0;
 
             // 基于准备好的dom，初始化echarts实例
