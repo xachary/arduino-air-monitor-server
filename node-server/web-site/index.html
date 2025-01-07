@@ -104,7 +104,10 @@
                 data: json.map((o) => o.time),
                 boundaryGap: false,
               },
-              yAxis: {},
+              yAxis: {
+                max: Math.ceil(max * 1.02),
+                min: Math.floor(min * 0.98),
+              },
               grid: {
                 left: "1.5%",
                 right: "2%",
