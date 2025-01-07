@@ -2,15 +2,9 @@ const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
-process.env.TZ = 'Asia/Shanghai'
+process.env.TZ = "Asia/Shanghai";
 
-const server = http.createServer(function (request, response) {
-  const url = request.url;
-  const method = request.method.toLowerCase();
-  const body = request.body;
-  console.log("url", url);
-  console.log("method", method);
-
+function writeLog(type, num) {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth() + 1;
@@ -23,46 +17,79 @@ const server = http.createServer(function (request, response) {
     .toString()
     .padStart(2, "0")}.txt`;
 
-  if (url === "/") {
-    fs.readFile(
-      path.resolve(__dirname, "./web-site/index.html"),
-      function (err, data) {
-        if (!err) {
-          response.writeHead(200, {
-            "Content-Type": "text/html;charset=UTF-8",
-          });
-          response.end(data);
-        } else {
-          throw err;
+  const dirPath = path.resolve(__dirname, "data", type);
+
+  const logPath = path.resolve(dirPath, logName);
+  console.log("logPath", logPath);
+
+  if (!fs.existsSync(dirPath)) {
+    fs.mkdirSync(dirPath);
+  }
+  fs.appendFileSync(
+    logPath,
+    `${hour.toString().padStart(2, "0")}${minute
+      .toString()
+      .padStart(2, "0")}${second.toString().padStart(2, "0")}_${num}\n`
+  );
+}
+
+const server = http.createServer(function (request, response) {
+  const url = request.url;
+  const method = request.method.toLowerCase();
+  console.log("url", url);
+  console.log("method", method);
+
+  if (method === "get") {
+    if (url === "/") {
+      // 首页
+      fs.readFile(
+        path.resolve(__dirname, "./web-site/index.html"),
+        function (err, data) {
+          if (!err) {
+            response.writeHead(200, {
+              "Content-Type": "text/html;charset=UTF-8",
+            });
+            response.end(data);
+          } else {
+            throw err;
+          }
         }
-      }
-    );
-  } else if (/^\/.+\.(js|ico)$/.test(url)) {
-    fs.readFile(
-      path.resolve(__dirname, `./web-site${url}`),
-      function (err, data) {
-        if (!err) {
-          response.writeHead(200, {
-            "Content-Type": "application/javascript;charset=UTF-8",
-          });
-          response.end(data);
-        } else {
-          throw err;
+      );
+    } else if (/^\/.+\.(js|ico)$/.test(url)) {
+      // 静态资源
+      fs.readFile(
+        path.resolve(__dirname, `./web-site${url}`),
+        function (err, data) {
+          if (!err) {
+            response.writeHead(200, {
+              "Content-Type": "application/javascript;charset=UTF-8",
+            });
+            response.end(data);
+          } else {
+            throw err;
+          }
         }
-      }
-    );
-  } else {
-    const type = url.match(/^\/([a-z\d]+)$/)?.[1];
+      );
+    } else {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = now.getMonth() + 1;
+      const date = now.getDate();
 
-    if (type) {
-      console.log("type", type);
+      const logName = `${year}${month.toString().padStart(2, "0")}${date
+        .toString()
+        .padStart(2, "0")}.txt`;
 
-      const dirPath = path.resolve(__dirname, "data", type);
+      // 获取接口
+      const type = url.match(/^\/([a-z\d]+)$/)?.[1];
+      if (type) {
+        console.log("type", type);
 
-      const logPath = path.resolve(dirPath, logName);
-      console.log("logPath", logPath);
+        const dirPath = path.resolve(__dirname, "data", type);
 
-      if (method === "get") {
+        const logPath = path.resolve(dirPath, logName);
+        console.log("logPath", logPath);
+
         response.writeHead(200, {
           "Content-Type": "application/json;charset=UTF-8",
         });
@@ -85,39 +112,44 @@ const server = http.createServer(function (request, response) {
         } else {
           response.end(JSON.stringify([]));
         }
-      } else if (method === "post") {
-        let body = "";
+      }
+    }
+  } else if (method === "post") {
+    if (/^\/batch$/.test(url)) {
+      // 批量新增接口
+      let body = "";
 
-        request.on("data", (chunk) => {
-          body += chunk;
-        });
+      request.on("data", (chunk) => {
+        body += chunk;
+      });
 
-        request.on("end", () => {
-          const num = parseFloat(body);
-          console.log("body", body)
+      request.on("end", () => {
+        try {
+          console.log("body", body);
+          const data = JSON.parse(body);
 
-          if(!isNaN(num)){
-            if (!fs.existsSync(dirPath)) {
-              fs.mkdirSync(dirPath);
-            }
-  
-            fs.appendFileSync(
-              logPath,
-              `${hour.toString().padStart(2, "0")}${minute
-                .toString()
-                .padStart(2, "0")}${second.toString().padStart(2, "0")}_${num}\n`
-            );
-          }
+          writeLog("hcho", data.hcho ?? 0);
+          writeLog("tvoc", data.tvoc ?? 0);
+          writeLog("co2", data.co2 ?? 0);
+          writeLog("temp", data.temp ?? 0);
+          writeLog("hum", data.hum ?? 0);
+          writeLog("uv", data.uv ?? 0);
 
           response.writeHead(200, {
             "Content-Type": "application/json;charset=UTF-8",
           });
           response.end("{}");
-        });
-      }
-    } else {
-      console.log("错误");
+        } catch (e) {
+          console.error(e);
+          response.writeHead(500, {
+            "Content-Type": "application/json;charset=UTF-8",
+          });
+          response.end("{}");
+        }
+      });
     }
+  } else {
+    console.log("错误");
   }
 });
 
