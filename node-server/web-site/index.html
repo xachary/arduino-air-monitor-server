@@ -257,34 +257,34 @@
             fetch(`/${type}`)
               .then((res) => res.json())
               .then((json) => {
-                const set = [];
-                for (let h = 0; h < 24; h++) {
-                  set.push([]);
-                }
-                for (const record of json) {
-                  const match = record.time.match(/^(\d{2})(\d{2})/);
-                  const hour = match?.[1];
-                  set[parseInt(hour)]?.push(record.value);
-                }
+                // const set = [];
+                // for (let h = 0; h < 24; h++) {
+                //   set.push([]);
+                // }
+                // for (const record of json) {
+                //   const match = record.time.match(/^(\d{2})(\d{2})/);
+                //   const hour = match?.[1];
+                //   set[parseInt(hour)]?.push(record.value);
+                // }
 
-                const shortcuts = [];
-                for (let h = 0; h < 24; h++) {
-                  shortcuts.push({
-                    time: `${h.toString().padStart(2, "0")}`,
-                    value:
-                      set[h].length > 0
-                        ? parseFloat(
-                            (
-                              set[h].reduce((total, v) => {
-                                total += v;
-                                return total;
-                              }, 0) / set[h].length
-                            ).toFixed(1)
-                          )
-                        : 0,
-                  });
-                }
-                this.renderChart(type, shortcuts);
+                // const shortcuts = [];
+                // for (let h = 0; h < 24; h++) {
+                //   shortcuts.push({
+                //     time: `${h.toString().padStart(2, "0")}`,
+                //     value:
+                //       set[h].length > 0
+                //         ? parseFloat(
+                //             (
+                //               set[h].reduce((total, v) => {
+                //                 total += v;
+                //                 return total;
+                //               }, 0) / set[h].length
+                //             ).toFixed(1)
+                //           )
+                //         : 0,
+                //   });
+                // }
+                this.renderChart(type, json);
               });
           },
           load() {
