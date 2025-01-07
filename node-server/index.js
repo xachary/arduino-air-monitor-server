@@ -48,6 +48,7 @@ const server = http.createServer(function (request, response) {
           if (!err) {
             response.writeHead(200, {
               "Content-Type": "text/html;charset=UTF-8",
+              "cache-control": "no-cache",
             });
             response.end(data);
           } else {
