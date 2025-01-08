@@ -93,7 +93,7 @@
                 : 0;
             // y范围
             const yRange = (() => {
-              const distance = max - min; // >= 0 的值
+              let distance = max - min; // >= 0 的值
 
               // 使其 > 0，取值 10（针对常为 0 的场景）
               if (distance <= 0) {
