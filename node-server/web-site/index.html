@@ -110,7 +110,7 @@
 
               return {
                 max: Math.ceil(max + offset),
-                min: min >= 0 && min - offset < 0 ? 0 : Math.ceil(min - offset), // 假如最小值是 0，不允许下偏移到负数
+                min: min >= 0 && min - offset < 0 ? 0 : Math.floor(min - offset), // 假如最小值是 0，不允许下偏移到负数
               };
             })();
 
