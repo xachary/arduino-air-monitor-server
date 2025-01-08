@@ -69,27 +69,50 @@
         },
         methods: {
           renderChart(type, json) {
+            // 数据
+            // const xData = json.map((o) => `${o.time.substring(0, 2)}:${o.time.substring(2, 4)}:${o.time.substring(4, 6)}`);
+            const xData = json.map(
+              (o) => `${o.time.substring(0, 2)}:${o.time.substring(2, 4)}`
+            );
+            const yData = json.map((o) => o.value);
+
             // 平均值
             const average =
-              json.length > 0
-                ? json
-                    .map((o) => o.value)
-                    .reduce((total, each) => total + each, 0) / json.length
+              yData.length > 0
+                ? yData.reduce((total, each) => total + each, 0) / json.length
                 : 0;
             // 最大值
             const max =
-              json.length > 0
-                ? json
-                    .map((o) => o.value)
-                    .reduce((v, each) => (each > v ? each : v), -Infinity)
+              yData.length > 0
+                ? yData.reduce((v, each) => (each > v ? each : v), -Infinity)
                 : 0;
             // 最小值
             const min =
-              json.length > 0
-                ? json
-                    .map((o) => o.value)
-                    .reduce((v, each) => (each < v ? each : v), Infinity)
+              yData.length > 0
+                ? yData.reduce((v, each) => (each < v ? each : v), Infinity)
                 : 0;
+            // y范围
+            const yRange = (() => {
+              const distance = max - min; // >= 0 的值
+
+              // 使其 > 0，取值 10（针对常为 0 的场景）
+              if (distance <= 0) {
+                distance = 10;
+              }
+
+              // 上、下偏移 10%
+              let offset = distance * 0.1;
+
+              // 偏移最小为 0.5（针对波动较小的场景）
+              if (offset < 0.5) {
+                offset = 0.5;
+              }
+
+              return {
+                max: Math.ceil(max + offset),
+                min: min >= 0 && min - offset < 0 ? 0 : Math.ceil(min - offset), // 假如最小值是 0，不允许下偏移到负数
+              };
+            })();
 
             // 基于准备好的dom，初始化echarts实例
             var myChart = echarts.init(document.getElementById(type));
@@ -98,15 +121,37 @@
               title: {
                 text: type.toUpperCase(),
               },
-              tooltip: {},
               xAxis: {
                 type: "category",
-                data: json.map((o) => o.time),
+                data: xData,
                 boundaryGap: false,
+                axisLine: {
+                  lineStyle: {
+                    color: "#15ac08",
+                  },
+                },
+                axisLabel: {
+                  color: "#999",
+                },
+                axisTick: {
+                  alignWithLabel: true,
+                },
               },
               yAxis: {
-                max: Math.ceil(max * 1.02),
-                min: Math.floor(min * 0.98),
+                axisLine: {
+                  show: true,
+                  lineStyle: {
+                    color: "#15ac08",
+                  },
+                },
+                axisLabel: {
+                  color: "#999",
+                },
+                axisTick: {
+                  show: true,
+                },
+                max: yRange.max,
+                min: yRange.min,
               },
               grid: {
                 left: "1.5%",
@@ -115,26 +160,36 @@
                 bottom: "2%",
                 containLabel: true,
               },
+              tooltip: {
+                trigger: "axis",
+                valueFormatter: (value) => {
+                  const fv = parseFloat(value);
+                  if (isNaN(fv)) {
+                    return "?";
+                  } else {
+                    return fv.toFixed(1);
+                  }
+                },
+              },
               series: [
                 {
-                  name: "时间",
+                  name: "数值",
                   type: "line",
-                  data: json.map((o) => o.value),
+                  data: yData,
                   smooth: true,
                   lineStyle: {
                     width: 1,
+                    color: "#EECB61",
                   },
                   showSymbol: false,
                 },
                 {
                   type: "line",
                   name: "Mean",
-                  data: json
-                    .map((o) => o.time)
-                    .map(() => ({
-                      value: average,
-                      symbol: "none",
-                    })),
+                  data: xData.map(() => ({
+                    value: average,
+                    symbol: "none",
+                  })),
                   silent: true,
                   tooltip: {
                     show: false,
@@ -170,12 +225,10 @@
                 {
                   type: "line",
                   name: "Max",
-                  data: json
-                    .map((o) => o.time)
-                    .map(() => ({
-                      value: max,
-                      symbol: "none",
-                    })),
+                  data: xData.map(() => ({
+                    value: max,
+                    symbol: "none",
+                  })),
                   silent: true,
                   tooltip: {
                     show: false,
@@ -211,12 +264,10 @@
                 {
                   type: "line",
                   name: "Min",
-                  data: json
-                    .map((o) => o.time)
-                    .map(() => ({
-                      value: min,
-                      symbol: "none",
-                    })),
+                  data: xData.map(() => ({
+                    value: min,
+                    symbol: "none",
+                  })),
                   silent: true,
                   tooltip: {
                     show: false,
@@ -258,34 +309,47 @@
             fetch(`/${type}`)
               .then((res) => res.json())
               .then((json) => {
-                // const set = [];
-                // for (let h = 0; h < 24; h++) {
-                //   set.push([]);
-                // }
-                // for (const record of json) {
-                //   const match = record.time.match(/^(\d{2})(\d{2})/);
-                //   const hour = match?.[1];
-                //   set[parseInt(hour)]?.push(record.value);
-                // }
+                const set = {};
+                for (let h = 0; h < 24; h++) {
+                  for (let m = 0; m < 60; m++) {
+                    set[
+                      `${h.toString().padStart(2, "0")}${m
+                        .toString()
+                        .padStart(2, "0")}`
+                    ] = {
+                      sum: 0,
+                      count: 0,
+                    };
+                  }
+                }
 
-                // const shortcuts = [];
-                // for (let h = 0; h < 24; h++) {
-                //   shortcuts.push({
-                //     time: `${h.toString().padStart(2, "0")}`,
-                //     value:
-                //       set[h].length > 0
-                //         ? parseFloat(
-                //             (
-                //               set[h].reduce((total, v) => {
-                //                 total += v;
-                //                 return total;
-                //               }, 0) / set[h].length
-                //             ).toFixed(1)
-                //           )
-                //         : 0,
-                //   });
-                // }
-                this.renderChart(type, json);
+                for (const record of json) {
+                  const match = record.time.match(/^(\d{4})/);
+                  const hourMinute = match?.[1];
+                  if (hourMinute) {
+                    set[hourMinute].sum += record.value;
+                    set[hourMinute].count++;
+                  }
+                }
+
+                const shortcuts = [];
+                for (let time of Object.keys(set).sort((a, b) =>
+                  a.localeCompare(b)
+                )) {
+                  const item = set[time];
+                  if (item.count > 0) {
+                    const value = item.sum / item.count;
+                    shortcuts.push({
+                      time,
+                      value,
+                    });
+                  }
+                }
+
+                console.log(type, shortcuts);
+
+                // this.renderChart(type, json);
+                this.renderChart(type, shortcuts);
               });
           },
           load() {
