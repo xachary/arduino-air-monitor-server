@@ -10,6 +10,7 @@
     <style>
       body {
         margin: 0;
+        background-color: #000;
       }
       #app {
         /* display: flex;
@@ -123,6 +124,9 @@
             myChart.setOption({
               title: {
                 text: type.toUpperCase(),
+                textStyle: {
+                  color: "#fff",
+                },
               },
               xAxis: {
                 type: "category",
@@ -130,7 +134,7 @@
                 boundaryGap: false,
                 axisLine: {
                   lineStyle: {
-                    color: "#15ac08",
+                    color: "rgba(255,255,255,0.5)",
                   },
                 },
                 axisLabel: {
@@ -144,7 +148,7 @@
                 axisLine: {
                   show: true,
                   lineStyle: {
-                    color: "#15ac08",
+                    color: "rgba(255,255,255,0.8)",
                   },
                 },
                 axisLabel: {
@@ -152,6 +156,11 @@
                 },
                 axisTick: {
                   show: true,
+                },
+                splitLine: {
+                  lineStyle: {
+                    color: "rgba(255,255,255,0.2)",
+                  },
                 },
                 max: yRange.max,
                 min: yRange.min,
@@ -182,7 +191,7 @@
                   smooth: true,
                   lineStyle: {
                     width: 1,
-                    color: "#EECB61",
+                    color: "rgba(250,224,124,0.8)",
                   },
                   showSymbol: false,
                 },
@@ -213,13 +222,13 @@
                         label: {
                           position: "insideMiddleTop",
                           formatter: ({ value }) => `Mean: ${value.toFixed(2)}`,
-                          color: "#56a4d9",
+                          color: "#ffffff",
                           fontWeight: "bold",
                           fontSize: 14,
                         },
                         lineStyle: {
                           type: [14, 6],
-                          color: "#56a4d9",
+                          color: "#ffffff",
                         },
                       },
                     ],
