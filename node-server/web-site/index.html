@@ -37,6 +37,7 @@
     <script>
       const { createApp, ref } = Vue;
 
+      let timer = 0;
       createApp({
         setup() {
           const board = ref();
@@ -394,6 +395,7 @@
               });
           },
           load() {
+            clearTimeout(timer);
             Promise.all([
               this.loadType("hcho"),
               this.loadType("tvoc"),
@@ -402,6 +404,10 @@
               this.loadType("hum"),
               this.loadType("uv"),
             ]);
+            // 自动刷新数据
+            timer = setTimeout(() => {
+              this.load();
+            }, 5000);
           },
         },
       }).mount("#app");
