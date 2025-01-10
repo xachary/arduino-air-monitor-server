@@ -68,6 +68,7 @@
           // }, 3000);
         },
         methods: {
+          // 图表显示
           renderChart(type, json) {
             // 数据
             // const xData = json.map((o) => `${o.time.substring(0, 2)}:${o.time.substring(2, 4)}:${o.time.substring(4, 6)}`);
@@ -110,7 +111,8 @@
 
               return {
                 max: Math.ceil(max + offset),
-                min: min >= 0 && min - offset < 0 ? 0 : Math.floor(min - offset), // 假如最小值是 0，不允许下偏移到负数
+                min:
+                  min >= 0 && min - offset < 0 ? 0 : Math.floor(min - offset), // 假如最小值是 0，不允许下偏移到负数
               };
             })();
 
@@ -304,7 +306,45 @@
             });
             myChart.resize();
           },
-          //
+          /**
+           * 过滤异常数据（标准差法）
+           * 阈值：
+           * 1倍标准差：通常用于确定数据点是否离群。
+           * 2倍、3倍标准差：在质量控制中，这些阈值用于确定是否需要采取纠正措施。
+           * 仅供参考：
+           * 1倍标准差：这个区域通常被称为平均值附近的一个“可信区间”。在这个区域内，数据点占所有数据点的68.27%。这是因为正态分布（也称为高斯分布）的特性，即数据在平均值附近呈对称分布。
+           * 2倍标准差：这个区域通常被称为平均值附近的一个“更可信区间”。在这个区域内，数据点占所有数据点的95.45%。这意味着在这个范围内找到特定数据点的概率非常高。
+           * 3倍标准差：这个区域被称为平均值附近的一个“非常可信区间”。在这个区域内，数据点占所有数据点的99.73%。这意味着在这个范围内找到特定数据点的概率非常高。
+           * @param arr 数组 {value:number}
+           * @param threshold 阈值（标准差倍数）
+           */
+          filterOutliers(arr, threshold = 2) {
+            // 平均值
+            const calcMean = (arr) => {
+              return (
+                arr.reduce((sum, item) => sum + item.value, 0) / arr.length
+              );
+            };
+            // 标准差
+            const calcStandardDeviation = (arr, mean) => {
+              let variance = 0;
+              for (let i = 0; i < arr.length; i++) {
+                variance += Math.pow(arr[i].value - mean, 2);
+              }
+              return Math.sqrt(variance / arr.length);
+            };
+
+            // 计算平均值
+            const mean = calcMean(arr);
+            // 计算标准差
+            const stdDev = calcStandardDeviation(arr, mean);
+
+            // 过滤掉超过阈值的数据
+            return arr.filter(
+              (item) => Math.abs(item.value - mean) <= stdDev * threshold
+            );
+          },
+          // 加载数据
           loadType(type) {
             fetch(`/${type}`)
               .then((res) => res.json())
@@ -323,7 +363,8 @@
                   }
                 }
 
-                for (const record of json) {
+                // 过滤掉超过阈值的数据
+                for (const record of this.filterOutliers(json)) {
                   const match = record.time.match(/^(\d{4})/);
                   const hourMinute = match?.[1];
                   if (hourMinute) {
