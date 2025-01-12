@@ -374,7 +374,18 @@
                 }
 
                 // 过滤掉超过阈值的数据
-                for (const record of this.filterOutliers(json)) {
+                for (const record of this.filterOutliers(
+                  json,
+                  // 根据观察，越稳定可以越放宽（越大）
+                  {
+                    hcho: 2,
+                    tvoc: 3,
+                    co2: 4,
+                    temp: 3,
+                    hum: 3,
+                    uv: 2,
+                  }[type]
+                )) {
                   const match = record.time.match(/^(\d{4})/);
                   const hourMinute = match?.[1];
                   if (hourMinute) {
