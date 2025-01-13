@@ -427,11 +427,12 @@
               this.loadType("temp"),
               this.loadType("hum"),
               this.loadType("uv"),
-            ]);
-            // 自动刷新数据
-            timer = setTimeout(() => {
-              this.load();
-            }, 5000);
+            ]).then(() => {
+              // 自动刷新数据
+              timer = setTimeout(() => {
+                this.load();
+              }, 5000);
+            });
           },
         },
       }).mount("#app");
