@@ -123,7 +123,11 @@
             // 绘制图表
             myChart.setOption({
               title: {
-                text: type.toUpperCase(),
+                text:
+                  type.toUpperCase() +
+                  (yData.length > 1
+                    ? `(${yData[yData.length - 1].toFixed(1)})`
+                    : ""),
                 textStyle: {
                   color: "#fff",
                 },
